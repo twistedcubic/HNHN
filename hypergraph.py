@@ -26,11 +26,6 @@ class HyperMod(nn.Module):
     def __init__(self, input_dim, vidx, eidx, nv, ne, v_weight, e_weight, args, is_last=False, use_edge_lin=False):
         super(HyperMod, self).__init__()
         self.args = args
-        #initialize representations
-        #self.v = torch.randn( )
-        #can use torch embedding layer!
-        #self.v_embed = nn.Embedding(  )
-        #self.e = torch.randn( )
         self.eidx = eidx
         self.vidx = vidx
         self.v_weight = v_weight
@@ -48,18 +43,15 @@ class HyperMod(nn.Module):
             self.edge_lin = torch.nn.Linear(args.n_hidden, args.final_edge_dim)
             
     def forward(self, v, e):
-        #pdb.set_trace()
-        #v = self.vtx_lin(v)
+
         if args.edge_linear:
             ve = torch.matmul(v, self.W_v2e) + self.b_v
         else:
             ve = F.relu(torch.matmul(v, self.W_v2e) + self.b_v)
         #weigh ve according to how many edges a vertex is connected to
-        #ve *= self.v_weight
-        #pdb.set_trace()
         v_fac = 4 if args.predict_edge else 1
-        v = v*self.v_weight*v_fac #*3 *2
-        #pdb.set_trace()        
+        v = v*self.v_weight*v_fac 
+
         eidx = self.eidx.unsqueeze(-1).expand(-1, self.args.n_hidden)
         e = e.clone()
         ve = (ve*self.v_weight)[self.args.paper_author[:, 0]]
@@ -71,10 +63,7 @@ class HyperMod(nn.Module):
         #e = e*self.e_weight
         #ev *= self.e_weight
         #v = torch.zeros(self.nv , self.n_hidden)
-        if False and self.args.cur_epoch % 4 == 0:
-            print(self.W_v2e.grad)
-            pdb.set_trace()
-        #pdb.set_trace()
+
         vidx = self.vidx.unsqueeze(-1).expand(-1, self.args.n_hidden)
         ev_vtx = (ev*self.e_weight)[self.args.paper_author[:, 1]]
         #ev_vtx = (ev)[self.args.paper_author[:, 1]]
@@ -87,7 +76,6 @@ class HyperMod(nn.Module):
             v = F.dropout(v, args.dropout_p)
         if self.is_last_mod and self.use_edge_lin:
             ev_edge = (ev*torch.exp(self.e_weight)/np.exp(2))[self.args.paper_author[:, 1]]
-            pdb.set_trace()
             v2 = torch.zeros_like(v)
             v2.scatter_add_(src=ev_edge, index=vidx, dim=0)
             v2 = self.edge_lin(v2)
@@ -101,7 +89,7 @@ class HyperMod(nn.Module):
         #weigh ve according to how many edges a vertex is connected to
         #ve *= self.v_weight
         v = v*self.v_weight #*2
-        #pdb.set_trace()        
+        
         eidx = self.eidx.unsqueeze(-1).expand(-1, self.args.n_hidden)
         e = e.clone()
         ve = (ve*self.v_weight)[self.args.paper_author[:, 0]]
@@ -111,10 +99,6 @@ class HyperMod(nn.Module):
         e = e*self.e_weight
         #ev *= self.e_weight
         #v = torch.zeros(self.nv , self.n_hidden)
-        if False and self.args.cur_epoch % 4 == 0:
-            print(self.W_v2e.grad)
-            pdb.set_trace()
-        #pdb.set_trace()
         vidx = self.vidx.unsqueeze(-1).expand(-1, self.args.n_hidden)
         ev_vtx = (ev*self.e_weight)[self.args.paper_author[:, 1]]        
         #v = v.clone()
@@ -142,23 +126,6 @@ class Hypergraph(nn.Module):
         '''
         super(Hypergraph, self).__init__()
         self.args = args
-        '''
-        #initialize representations
-        #self.v = torch.randn( )
-        #can use torch embedding layer!
-        #self.v_embed = nn.Embedding(  )
-        #self.e = torch.randn( )
-        self.eidx = eidx
-        self.vidx = vidx
-        self.v_weight = v_weight
-        self.e_weight = e_weight
-        self.nv, self.ne = args.nv, args.ne
-        #torch.empty(m, n).uniform_(1,2) #torch.randn((m, n))
-        self.W_v2e = Parameter(torch.randn(args.n_hidden, args.n_hidden))
-        self.W_e2v = Parameter(torch.randn(args.n_hidden, args.n_hidden))
-        self.b_v = Parameter(torch.zeros(args.n_hidden))
-        self.b_e = Parameter(torch.zeros(args.n_hidden))
-        '''
         self.hypermods = []
         is_first = True
         for i in range(args.n_layers):
@@ -167,7 +134,7 @@ class Hypergraph(nn.Module):
             is_first = False
 
         if args.predict_edge:
-            self.edge_lin = torch.nn.Linear(args.input_dim, args.n_hidden) #HERE
+            self.edge_lin = torch.nn.Linear(args.input_dim, args.n_hidden) 
 
         self.vtx_lin = torch.nn.Linear(args.input_dim, args.n_hidden)
         #insetad of A have vector of indices
@@ -178,7 +145,6 @@ class Hypergraph(nn.Module):
         self.to(device)
         for mod in self.hypermods:
             mod.to('cuda')
-            #mod #HERE
         return self
         
     def all_params(self):
@@ -197,7 +163,7 @@ class Hypergraph(nn.Module):
             e = self.edge_lin(e)
         for mod in self.hypermods:
             v, e = mod(v, e)
-        #pdb.set_trace()
+        
         pred = self.cls(v)
         return v, e, pred
         
@@ -241,7 +207,7 @@ class Hypertrain:
             loss.backward()            
             self.optim.step()
             self.scheduler.step()
-        #pdb.set_trace()
+
         e_loss = self.eval(pred_all)
         return pred_all, loss, best_err
 
@@ -254,20 +220,16 @@ class Hypertrain:
             ones = -torch.ones(len(all_pred))
             ones[self.args.val_idx] = 1          
         
-        #tgt = self.args.all_labels
-        #tgt[self.args.label_idx] = -1
-        
         tgt = self.args.all_labels
         tgt[ones==-1] = -1        
         fn = nn.CrossEntropyLoss(ignore_index=-1)
         loss = fn(all_pred, tgt)
         #print(' ~~ eval loss ~~ ', loss)
         
-        #pdb.set_trace()
         tgt = self.args.all_labels[ones>-1]
         #tgt[self.args.label_idx] = -1
         pred = torch.argmax(all_pred, -1)[ones>-1]
-        #pdb.set_trace()
+        
         acc = torch.eq(pred, tgt).sum().item()/len(tgt)
         if args.verbose:
             print('TEST ERR ', 1-acc, ' ~~ eval loss ~~ ', loss)
@@ -359,7 +321,7 @@ def gen_data_cora(args, data_path='data/cora_author.pt', flip_edge_node=True, do
         all_cls_idx = []
         n_label_per_cls = n_labels//args.n_cls
         for i in range(args.n_cls):
-            #pdb.set_trace()
+            
             cur_idx = torch.LongTensor(list(range(nv)))[args.all_labels == i]
             rand_idx = torch.from_numpy(np.random.choice(len(cur_idx), size=(n_label_per_cls,), replace=False )).to(torch.int64)
             cur_idx = cur_idx[rand_idx]
@@ -381,7 +343,7 @@ def gen_data_cora(args, data_path='data/cora_author.pt', flip_edge_node=True, do
     
     args.labels = args.all_labels[args.label_idx].to(device) #torch.ones(n_labels, dtype=torch.int64)
     args.all_labels = args.all_labels.to(device)
-    #pdb.set_trace()
+    
     
     #isinstance(paper_X, scipy.sparse.csr.csr_matrix)
     if isinstance(paper_X, np.ndarray):
@@ -448,8 +410,6 @@ def gen_data_dblp(args, data_path='data/dblp_data.pt', do_val=False):
     """
     #paper_idx':paper_idx, 'author':author_idx, 'paper_X':dataset['features'], 'train_idx':train, 'test_idx':test
     data = torch.load(data_path)
-    ###
-    #pdb.set_trace()
 
     args.n_hidden = 800 if args.dataset_name == 'pubmed' else 400
     args.final_edge_dim = 100
@@ -482,7 +442,7 @@ def gen_data_dblp(args, data_path='data/dblp_data.pt', do_val=False):
     args.input_dim = X.shape[-1] #300 ###
     args.v = torch.from_numpy(X).to(device)
     args.n_cls = int(args.all_labels.max()) + 1 #len(cls_l)
-    #pdb.set_trace()
+    
     '''
     #no replacement!
     n_labels = max(1, int(nv*.052))
@@ -511,11 +471,11 @@ def gen_data_dblp(args, data_path='data/dblp_data.pt', do_val=False):
     nv = args.nv
     
     args.vidx = torch.from_numpy(data['paper_idx']).to(torch.int64).to(device) # paper_author[:, 0]
-    #pdb.set_trace()
+    
     if 'author' in data:
         data['author_idx'] = data['author']
     args.eidx = torch.from_numpy(data['author_idx']).to(torch.int64).to(device) #paper_author[:, 1]
-    #pdb.set_trace()
+    
     args.paper_author = torch.stack([args.vidx, args.eidx], -1)
     paper_author = args.paper_author
     args.v_weight = torch.Tensor([(1/w if w > 0 else 1) for w in paperwt]).unsqueeze(-1).to(device) #torch.ones((nv, 1)) / 2 #####
@@ -541,7 +501,7 @@ def gen_data_dblp(args, data_path='data/dblp_data.pt', do_val=False):
         v_reg_weight[i] = v_reg_wt
         author2sum[author_idx].append(v_reg_wt) ###
         
-    pdb.set_trace()
+    
     #'''
     v_reg_sum = torch.zeros(nv) ###
     e_reg_sum = torch.zeros(ne) ###

@@ -13,6 +13,5 @@ def add_path(path):
 cur_dir = osp.dirname(__file__)
 
 #add_path(osp.join(cur_dir, './model'))
-#add_path(osp.join(cur_dir, '../hypergcn'))
-add_path(osp.join(cur_dir, '../hypergcn2'))
+add_path(osp.join(cur_dir, '../hypergcn'))
 add_path(osp.join(cur_dir, '../hgnn'))
