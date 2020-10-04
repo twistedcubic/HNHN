@@ -6,6 +6,8 @@ This repo contains the companion code for our paper:
 [**HNHN: Hypergraph Networks with Hyperedge Neurons**](https://arxiv.org/abs/2006.12278)<br>
 By [Yihe Dong](https://yihedong.me/), [Will Sawin](https://williamsawin.com/), and [Yoshua Bengio](https://yoshuabengio.org/)
 
+Presented at the Graph Representation Learning and Beyond workshop at ICML 2020.
+
 One can run training on the main HNHN script as follows:
 
 E.g. specify dataset name, set random seed, and number of layers:
@@ -35,3 +37,14 @@ Note:
 For an example of processed data please see the [CiteSeer data](data/citeseer6cls3703.pt) ([citeseer.pt](data/citeseer.pt) contains the same hypergraph but with reduced feature dimension).
 
 p.s. please tag me when creating an issue, GitHub currrently cannot notify me of new issues.
+
+If you find our work helpful, please cite as:
+```
+@article{HNHN2020,
+  title         = {HNHN: Hypergraph Networks with Hyperedge Neurons},
+  author 	= {Dong, Yihe and Sawin, Will and Bengio, Yoshua},
+  url       	= {https://arxiv.org/abs/2006.12278},
+  journal 	= {ICML Graph Representation Learning and Beyond Workshop},
+  year          = {2020}
+  }
+```
